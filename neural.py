@@ -63,22 +63,24 @@ class network:
         return self.loss
 
 
-l = layer(2,1,nop,prime_nop)
+l = layer(2,3,nop,prime_nop)
+l2 = layer(3,1,nop,prime_nop)
 
 n = network(square_loss,prime_square_loss)
 
-n.add_layer(l)
 
+n.add_layer(l)
+n.add_layer(l2)
 x = np.array([[1,1]]).reshape(2,-1)
 y = np.array([3]).reshape(1,-1)
 x2 = np.array([[2,4]]).reshape(2,-1)
 y2 = np.array([10]).reshape(1,-1)
 
-for _ in range(2):
+for _ in range(1):
     loss = n.learn(x,y)
     print loss
-print l.weights
-print l.bias
+print l2.weights
+print l2.bias
 # for _ in range(880):
 #     o=l.forward(x)
 #     dx = l.backward(o-y)
