@@ -48,25 +48,48 @@ class network:
     def add_layer(self,l):
         self.layers.append(l)
     def learn(self,x,y):
-        
+        x_in = x
+        for layer in self.layers:
+            x_in = layer.forward(x_in)
+        final_out = x_in
+        self.loss = self.loss_func(final_out,y)
+        self.prim_loss = self.prime_loss_func(final_out,y)
+
+        dy = self.prim_loss
+
+        for layer in self.layers[-1::-1]:
+            dy = layer.backward(dy)
+            layer.apply_gradients(self.learning_rate)
+        return self.loss
+
 
 l = layer(2,1,nop,prime_nop)
+
+n = network(square_loss,prime_square_loss)
+
+n.add_layer(l)
 
 x = np.array([[1,1]]).reshape(2,-1)
 y = np.array([3]).reshape(1,-1)
 x2 = np.array([[2,4]]).reshape(2,-1)
 y2 = np.array([10]).reshape(1,-1)
-for _ in range(880):
-    o=l.forward(x)
-    dx = l.backward(o-y)
-    l.apply_gradients(0.01)
-    o=l.forward(x2)
-    dx = l.backward(o-y2)
-    l.apply_gradients(0.01)
-final=l.forward(x2)
 
-print(final)
-print(l.weights)
-print(l.bias)
+for _ in range(2):
+    loss = n.learn(x,y)
+    print loss
+print l.weights
+print l.bias
+# for _ in range(880):
+#     o=l.forward(x)
+#     dx = l.backward(o-y)
+#     l.apply_gradients(0.01)
+#     o=l.forward(x2)
+#     dx = l.backward(o-y2)
+#     l.apply_gradients(0.01)
+# final=l.forward(x2)
+
+# print(final)
+# print(l.weights)
+# print(l.bias)
 
 
