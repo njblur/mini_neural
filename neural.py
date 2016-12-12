@@ -8,11 +8,28 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 def prime_sigmoid(x):
     return sigmoid(x)*(1-sigmoid(x))
+def softmax(x):
+    exp = np.exp(x)
+    sum = np.sum(exp)
+    y = exp/sum
+    return y
+def prime_softmax(x):
+    return softmax(x)*(1-softmax(x))
+class activation:
+    def __init__(self,active,prime_active):
+        self.active = active
+        self.prime_active = prime_active
+
+activations = dict()
+activations["sigmoid"] = activation(sigmoid,prime_sigmoid)
+activations["liner"] = activation(nop,prime_nop)
+activations["softmax"] = activation(softmax,prime_softmax)
 
 class layer:
-    def __init__(self,input_size,output_size,fn_activate,fn_prime_activate,bias_rate=1.0):
-        self.fn_activate = fn_activate
-        self.fn_prime_activate = fn_prime_activate
+    def __init__(self,input_size,output_size,active,bias_rate=1.0):
+        a = activations[active]
+        self.fn_activate = a.active
+        self.fn_prime_activate = a.prime_active
         self.weights = np.random.randn(output_size,input_size)
         self.d_weights = np.zeros((output_size,input_size))
         self.bias = np.random.randn(output_size,1)
@@ -70,3 +87,10 @@ class network:
     def set_learning_rate(self,learning_rate):
         self.learning_rate = learning_rate
 
+if __name__ == "__main__":
+    print "test start from here"
+    x = np.array([[1],[5],[7]])
+    y = softmax(x)
+    py = prime_softmax(x)
+    print y
+    print py
