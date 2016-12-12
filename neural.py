@@ -57,6 +57,11 @@ def square_loss(out,y):
 def prime_square_loss(out,y):
     return (out-y)
 
+def sigmoid_loss(a,y):
+    return -y*np.log(a)-(1-y)*np.log(1-a)
+def prime_sigmoid_loss(a,y):
+    return (1-y)/(1-a)-y/a
+
 class network:
     def __init__(self,loss_func,prime_loss_func,learning_rate=0.0001):
         self.loss_func = loss_func
@@ -92,5 +97,12 @@ if __name__ == "__main__":
     x = np.array([[1],[5],[7]])
     y = softmax(x)
     py = prime_softmax(x)
+
+    a = 0.8
+    sm = sigmoid_loss(a,1)
+    psm = prime_sigmoid_loss(a,1)
     print y
     print py
+
+    print sm
+    print psm
