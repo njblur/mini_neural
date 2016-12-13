@@ -41,7 +41,10 @@ class layer:
         self.out = self.fn_activate(self.z)
         return self.out
     def backward(self,y):
-        self.dy = self.fn_prime_activate(self.out) * y
+        if(self.fn_activate == softmax):
+            self.dy = y
+        else:
+            self.dy = self.fn_prime_activate(self.out) * y
         self.d_weights = np.matmul(self.dy,self.x.T)
         self.d_bias = self.dy
         self.dx = np.matmul(self.weights.T,self.dy)
@@ -63,9 +66,10 @@ def prime_sigmoid_loss(a,y):
     return (1-y)/(1-a)-y/a
 
 def softmax_loss(a,y):
-    return -y*np.log(a)
+    l = -y*np.log(a)
+    return np.sum(l)
 def prime_softmax_loss(a,y):
-    return -y/a
+    return a-y
 class loss_func:
     def __init__(self,loss,prime_loss):
         self.loss = loss
@@ -113,10 +117,11 @@ if __name__ == "__main__":
 
     a = 0.8
     asoft = np.array([[0.1],[0.9],[0.01]])
-    ysoft = np.array([[1],[0],[0]])
+    ysoft = np.array([[0],[1],[0]])
     loss = softmax_loss(asoft,ysoft)
     ploss = prime_softmax_loss(asoft,ysoft)
 
+    print loss
     print ploss
     sm = sigmoid_loss(a,1)
     psm = prime_sigmoid_loss(a,1)
