@@ -9,7 +9,7 @@ if(len(sys.argv)==3):
     heads = int(sys.argv[1])
     legs = int(sys.argv[2])
 
-n = network(square_loss,prime_square_loss,learning_rate=1.0)
+n = network("square",learning_rate=1.0)
 l = layer(2,2,"liner",bias_rate=0.0)
 l2 = layer(2,1,"liner",bias_rate=0.0)
 
@@ -29,6 +29,6 @@ for _ in range(4000):
         break
     # loss = n.learn(x,y)
 
-
 print loss
-print "there are {} chicken {} rabbits ".format (l2.weights[0,0],l2.weights[0,1])
+print "{} heads with {} legs ".format(heads,legs)
+print "there are {} chicken {} rabbits,maybe, we guess ".format (l2.weights[0,0],l2.weights[0,1])

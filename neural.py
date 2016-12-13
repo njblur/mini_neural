@@ -51,21 +51,34 @@ class layer:
         self.weights -= self.d_weights*learning_rate
         self.bias -= self.d_bias
 
-def square_loss(out,y):
-    l = (out-y)*(out-y)/2
+def square_loss(a,y):
+    l = (a-y)*(a-y)/2
     return np.prod(l)
-def prime_square_loss(out,y):
-    return (out-y)
+def prime_square_loss(a,y):
+    return (a-y)
 
 def sigmoid_loss(a,y):
     return -y*np.log(a)-(1-y)*np.log(1-a)
 def prime_sigmoid_loss(a,y):
     return (1-y)/(1-a)-y/a
 
+def softmax_loss(a,y):
+    return -y*np.log(a)
+def prime_softmax_loss(a,y):
+    return -y/a
+class loss_func:
+    def __init__(self,loss,prime_loss):
+        self.loss = loss
+        self.prime_loss = prime_loss
+loss_funcs = dict()
+loss_funcs["square"] = loss_func(square_loss,prime_square_loss)
+loss_funcs["sigmoid"] = loss_func(sigmoid_loss,prime_sigmoid_loss)
+loss_funcs["softmax"] = loss_func(softmax_loss,prime_softmax_loss)
 class network:
-    def __init__(self,loss_func,prime_loss_func,learning_rate=0.0001):
-        self.loss_func = loss_func
-        self.prime_loss_func = prime_loss_func
+    def __init__(self,loss,learning_rate=0.0001):
+        f_loss = loss_funcs[loss]
+        self.loss_func = f_loss.loss
+        self.prime_loss_func = f_loss.prime_loss
         self.learning_rate = learning_rate
         self.layers = []
     def add_layer(self,l):
@@ -99,6 +112,12 @@ if __name__ == "__main__":
     py = prime_softmax(x)
 
     a = 0.8
+    asoft = np.array([[0.1],[0.9],[0.01]])
+    ysoft = np.array([[1],[0],[0]])
+    loss = softmax_loss(asoft,ysoft)
+    ploss = prime_softmax_loss(asoft,ysoft)
+
+    print ploss
     sm = sigmoid_loss(a,1)
     psm = prime_sigmoid_loss(a,1)
     print y
