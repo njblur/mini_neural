@@ -46,7 +46,7 @@ class layer:
         else:
             self.dy = self.fn_prime_activate(self.out) * y
         self.d_weights = np.matmul(self.dy,self.x.T)
-        self.d_bias = self.dy
+        self.d_bias = np.sum(self.dy,axis=1,keepdims=1)
         self.dx = np.matmul(self.weights.T,self.dy)
        
         return self.dx
@@ -55,7 +55,7 @@ class layer:
         self.bias -= self.d_bias
 
 def square_loss(a,y):
-    l = (a-y)*(a-y)/2
+    l = np.sum((a-y)*(a-y))/2
     return np.prod(l)
 def prime_square_loss(a,y):
     return (a-y)
