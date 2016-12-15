@@ -11,9 +11,8 @@ def prime_sigmoid(x):
 def softmax(x):
     maxx = np.max(x,axis=0,keepdims=0)
     regx = x-maxx
-    print regx
     exp = np.exp(regx)
-    sum = np.sum(exp)
+    sum = np.sum(exp,axis=0,keepdims=0)
     y = exp/sum
     return y
 def prime_softmax(x):
