@@ -9,7 +9,10 @@ def sigmoid(x):
 def prime_sigmoid(x):
     return sigmoid(x)*(1-sigmoid(x))
 def softmax(x):
-    exp = np.exp(x)
+    maxx = np.max(x,axis=0,keepdims=0)
+    regx = x-maxx
+    print regx
+    exp = np.exp(regx)
     sum = np.sum(exp)
     y = exp/sum
     return y
@@ -130,3 +133,7 @@ if __name__ == "__main__":
 
     print sm
     print psm
+
+    z = np.array([135,138,40]).T
+    maxz = softmax(z)
+    print maxz
