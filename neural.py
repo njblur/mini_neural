@@ -5,7 +5,9 @@ def nop(x):
 def prime_nop(x):
     return np.ones(x.shape)
 def sigmoid(x):
-    return 1/(1+np.exp(-x))
+    x[x<-20] = -20
+    x[x>20] = 20
+    return 1.0/(1.0+np.exp(-x))
 def prime_sigmoid(x):
     return sigmoid(x)*(1-sigmoid(x))
 def softmax(x):
@@ -28,7 +30,7 @@ activations["liner"] = activation(nop,prime_nop)
 activations["softmax"] = activation(softmax,prime_softmax)
 
 class layer:
-    def __init__(self,input_size,output_size,active,bias_rate=1.0):
+    def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.01):
         a = activations[active]
         self.fn_activate = a.active
         self.fn_prime_activate = a.prime_active
@@ -37,23 +39,25 @@ class layer:
         self.bias = np.random.randn(output_size,1)
         self.d_bias = np.zeros((output_size,1))
         self.bias_rate = bias_rate
+        self.weight_decay = weight_decay
     def forward(self,x):
         self.x = x
         self.z = np.matmul(self.weights,x)+self.bias*self.bias_rate
         self.out = self.fn_activate(self.z)
         return self.out
     def backward(self,y):
+        self.batch_size = len(y[0])
         if(self.fn_activate == softmax):
             self.dy = y
         else:
             self.dy = self.fn_prime_activate(self.out) * y
-        self.d_weights = np.matmul(self.dy,self.x.T)
-        self.d_bias = np.sum(self.dy,axis=1,keepdims=1)
+        self.d_weights = np.matmul(self.dy,self.x.T)/self.batch_size
+        self.d_bias = np.sum(self.dy,axis=1,keepdims=1)/self.batch_size
         self.dx = np.matmul(self.weights.T,self.dy)
-       
+
         return self.dx
     def apply_gradients(self,learning_rate):
-        self.weights -= self.d_weights*learning_rate
+        self.weights = self.weights - self.d_weights*learning_rate - self.weights*self.weight_decay/self.batch_size
         self.bias -= self.d_bias
 
 def square_loss(a,y):
@@ -63,9 +67,11 @@ def prime_square_loss(a,y):
     return (a-y)
 
 def sigmoid_loss(a,y):
-    return -y*np.log(a)-(1-y)*np.log(1-a)
+    l = -y*np.log(a)-(1-y)*np.log(1-a)
+    return np.sum(l)
 def prime_sigmoid_loss(a,y):
-    return (1-y)/(1-a)-y/a
+    # return (1-y)/(1-a)-y/a
+    return a-y
 
 def softmax_loss(a,y):
     l = -y*np.log(a)
