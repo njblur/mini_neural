@@ -78,7 +78,8 @@ while True:
 
   # forward the policy network and sample an action from the returned probability
   aprob, h = policy_forward(x)
-  action = 2 if np.random.uniform() < aprob else 3 # roll the dice!
+  #action = 2 if np.random.uniform() < aprob else 3 # roll the dice!
+  action = 2 if 0.5 < aprob else 3 # roll the dice!
 
   # record various intermediates (needed later for backprop)
   xs.append(x) # observation
@@ -127,6 +128,7 @@ while True:
     reward_sum = 0
     observation = env.reset() # reset env
     prev_x = None
+    learning_rate *= 0.9975
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
       print ('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!')
