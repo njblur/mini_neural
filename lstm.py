@@ -28,7 +28,6 @@ class LSTM:
         self.wct_bias = np.zeros([hidden_size, 1])
         self.d_c = np.zeros_like(self.c)
 
-
     def clear_state(self):
         self.c[:, :] = 0
         self.h[:, :] = 0
@@ -66,7 +65,7 @@ class LSTM:
         self.d_hx = np.zeros_like(self.hx)
         self.d_o_gate = dy * self.tanh_c
         self.d_tanh_c = dy * self.o_gate
-        self.d_c += self.d_tanh_c * (1 - self.tanh_c**2)
+        self.d_c = self.d_tanh_c * (1 - self.tanh_c**2)
 
         self.d_pre_c = self.d_c*self.f_gate
 
@@ -74,7 +73,7 @@ class LSTM:
         self.d_i_gate = self.d_c * self.c_tmp
         self.d_c_tmp = self.d_c * self.i_gate
 
-        self.d_c += self.d_pre_c
+        self.d_c = self.d_pre_c
 
         self.d_c_tmp = self.d_c_tmp * (1 - self.c_tmp * self.c_tmp)
         self.d_wct_bias = self.d_c_tmp
@@ -126,7 +125,7 @@ if __name__ == "__main__":
     vocab_size = len(vocab)
     data_size = len(data)
     loop = 5000
-    learning_rate = 1.5
+    learning_rate = 1.0
     learning_rate_decay = 1.0
     lstm = LSTM(vocab_size, hidden_size)
     l_softmax = neural.layer(hidden_size,vocab_size,"softmax")
