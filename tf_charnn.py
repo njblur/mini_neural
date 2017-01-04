@@ -4,12 +4,12 @@ data = open("input.txt").read()
 vocab = list(set(data))
 char_to_idx = {c:i for i,c in enumerate(vocab) }
 idx_to_char = {i:c for i,c in enumerate(vocab) }
-hidden_size = 5
+hidden_size = 50
 vocab_size = len(vocab)
 data_size = len(data)
 
-learning_rate = 0.5
-epoch = 1000
+learning_rate = 0.1
+epoch = 50
 
 
 inputs = tf.placeholder(shape=[1,vocab_size], dtype=tf.float32)
@@ -18,11 +18,11 @@ cell = tf.nn.rnn_cell.BasicRNNCell(hidden_size)
 softmax_weights = tf.Variable(tf.random_uniform([vocab_size,hidden_size],dtype=tf.float32,maxval=0.01,minval=0))
 softmax_bias = tf.Variable(tf.zeros([vocab_size,1]))
 init_state = cell.zero_state(1,tf.float32)
-state = init_state
+# state = init_state
 
 h,state = cell(inputs,init_state)
 
-out = tf.matmul(softmax_weights,h,transpose_b=True) #+softmax_bias
+out = tf.matmul(softmax_weights,h,transpose_b=True) +softmax_bias
 out_max = tf.nn.softmax(out,dim=0)
 out_index = tf.argmax(out_max,0)
 # y = tf.arg_max(targets,0)
@@ -47,8 +47,8 @@ with tf.Session() as sess:
             in_vec[in_idx,0] = 1.0
             out_vec[:,:] = 0
             out_vec[out_idx,0] = 1.0
-            nstate,l,t,m,idx = sess.run([state,loss,train,out_max,out_index],feed_dict={inputs:in_vec.T,targets:out_vec.T,state:nstate})
-            print("in {} out {}".format(in_vec,out_vec))
+            nstate,l,t,m,idx = sess.run([state,loss,train,out_max,out_index],feed_dict={inputs:in_vec.T,targets:out_vec.T,init_state:nstate})
+            # print("in {} out {}".format(in_vec,out_vec))
             # print nstate
             # print out_vec
             # print m
@@ -63,9 +63,9 @@ with tf.Session() as sess:
     start_vec[start_idx] = 1
     seq = []
     nstate = sess.run(init_state)
-    for _ in range(30):
+    for _ in range(5):
         seq.append(start_idx)
-        y,nstate = sess.run([out_index,state],feed_dict={inputs:start_vec.T,state:nstate})
+        y,nstate = sess.run([out_index,state],feed_dict={inputs:start_vec.T,init_state:nstate})
         start_idx = y[0]
         start_vec[:,:] = 0
         start_vec[start_idx,0] = 1
