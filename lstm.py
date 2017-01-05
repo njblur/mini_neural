@@ -39,64 +39,58 @@ class LSTM:
         self.pre_c = self.c.copy()
         self.hx = hx = np.vstack([self.pre_h, self.x])
 
-        self.f_gate = np.matmul(self.f_weights, hx)
-        self.f_gate += self.f_bias
-        self.f_gate = sigmoid(self.f_gate)
+        self.f_gate = np.matmul(self.f_weights, hx) + self.f_bias
+        self.f_gate_a = sigmoid(self.f_gate)
 
-        self.i_gate = np.matmul(self.i_weights, hx)
-        self.i_gate += self.i_bias
-        self.i_gate = sigmoid(self.i_gate)
+        self.i_gate = np.matmul(self.i_weights, hx) + self.i_bias
+        self.i_gate_a = sigmoid(self.i_gate)
 
-        self.o_gate = np.matmul(self.o_weights, hx)
-        self.o_gate += self.o_bias
-        self.o_gate = sigmoid(self.o_gate)
+        self.o_gate = np.matmul(self.o_weights, hx) + self.o_bias
+        self.o_gate_a = sigmoid(self.o_gate)
 
-        self.c_tmp = np.matmul(self.wct_weights, hx)
-        self.c_tmp += self.wct_bias
-        self.c_tmp = np.tanh(self.c_tmp)
+        self.c_tmp = np.matmul(self.wct_weights, hx) + self.wct_bias
+        self.c_tmp_a = np.tanh(self.c_tmp)
 
-        self.c = self.pre_c * self.f_gate + self.i_gate * self.c_tmp
+        self.c = self.pre_c * self.f_gate_a + self.i_gate_a * self.c_tmp_a
         self.tanh_c = np.tanh(self.c)
-        self.h = self.tanh_c * self.o_gate
+        self.h = self.tanh_c * self.o_gate_a
 
         return self.h
 
     def backward(self, dy):
         self.d_hx = np.zeros_like(self.hx)
-        self.d_o_gate = dy * self.tanh_c
-        self.d_tanh_c = dy * self.o_gate
+        self.d_o_gate_a = dy * self.tanh_c
+        self.d_tanh_c = dy * self.o_gate_a
         self.d_c = self.d_tanh_c * (1 - self.tanh_c**2)
 
-        self.d_pre_c = self.d_c*self.f_gate
+        self.d_pre_c = self.d_c*self.f_gate_a
+        self.d_f_gate_a = self.d_c * self.pre_c
+        self.d_i_gate_a = self.d_c * self.c_tmp_a
+        self.d_c_tmp_a = self.d_c * self.i_gate_a
 
-        self.d_f_gate = self.d_c * self.pre_c
-        self.d_i_gate = self.d_c * self.c_tmp
-        self.d_c_tmp = self.d_c * self.i_gate
+        self.d_c_tmp = self.d_c_tmp_a*(1-self.c_tmp_a**2)
+        self.d_o_gate = self.d_o_gate_a*self.o_gate_a*(1-self.o_gate_a)
+        self.d_i_gate = self.d_i_gate_a*self.i_gate_a*(1-self.i_gate_a)
+        self.d_f_gate = self.d_f_gate_a*self.f_gate_a*(1-self.f_gate_a)
 
-        self.d_c = self.d_pre_c
-
-        self.d_c_tmp = self.d_c_tmp * (1 - self.c_tmp * self.c_tmp)
         self.d_wct_bias = self.d_c_tmp
         self.d_wct_weights = np.matmul(self.d_c_tmp, self.hx.T)
         self.d_hx += np.matmul(self.wct_weights.T, self.d_c_tmp)
 
-        self.d_o_gate = self.d_o_gate * self.o_gate * (1 - self.o_gate)
         self.d_o_bias = self.d_o_gate
         self.d_o_weights = np.matmul(self.d_o_gate, self.hx.T)
         self.d_hx += np.matmul(self.o_weights.T, self.d_o_gate)
 
-        self.d_i_gate = self.d_i_gate * self.i_gate * (1 - self.i_gate)
         self.d_i_bias = self.d_i_gate
         self.d_i_weights = np.matmul(self.d_i_gate, self.hx.T)
         self.d_hx += np.matmul(self.i_weights.T, self.d_i_gate)
 
-        self.d_f_gate = self.d_f_gate * self.f_gate * (1 - self.f_gate)
         self.d_f_bias = self.d_f_gate
         self.d_f_weights = np.matmul(self.d_f_gate, self.hx.T)
         self.d_hx += np.matmul(self.f_weights.T, self.d_f_gate)
 
         for w in [self.d_f_bias,self.d_i_bias,self.d_o_bias,self.d_f_weights,self.d_i_weights,self.d_o_weights,self.wct_bias,self.wct_weights]:
-            np.clip(w,-8,8,out=w)
+            np.clip(w,-5,5,out=w)
 
         return self.d_hx[self.h.shape[0]:, :]
 
@@ -121,12 +115,13 @@ if __name__ == "__main__":
     vocab = list(set(data))
     char_to_idx = {c:i for i,c in enumerate(vocab) }
     idx_to_char = {i:c for i,c in enumerate(vocab) }
-    hidden_size = 20
+    hidden_size = 50
     vocab_size = len(vocab)
     data_size = len(data)
+    print data
     loop = 5000
-    learning_rate = 1.0
-    learning_rate_decay = 1.0
+    learning_rate = 0.2
+    learning_rate_decay = 0.9988
     lstm = LSTM(vocab_size, hidden_size)
     l_softmax = neural.layer(hidden_size,vocab_size,"softmax")
     
@@ -159,7 +154,7 @@ if __name__ == "__main__":
         start_vec = np.zeros([vocab_size, 1])
         start_vec[start_idx] = 1
         seq = []
-        for _ in range(30):
+        for _ in range(200):
             seq.append(start_idx)
             y = lstm.forward(start_vec)
             start_vec = l_softmax.forward(y)
