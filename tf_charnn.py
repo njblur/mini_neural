@@ -4,12 +4,12 @@ data = open("input.txt").read()
 vocab = list(set(data))
 char_to_idx = {c:i for i,c in enumerate(vocab) }
 idx_to_char = {i:c for i,c in enumerate(vocab) }
-hidden_size = 50
+hidden_size = 100
 vocab_size = len(vocab)
 data_size = len(data)
 
 learning_rate = 0.1
-epoch = 20
+epoch = 101
 
 inputs = tf.placeholder(shape=[1,vocab_size], dtype=tf.float32)
 targets = tf.placeholder(shape=[1,vocab_size], dtype=tf.float32)
@@ -58,19 +58,21 @@ with tf.Session() as sess:
             total_loss += l
         print("{} loss after {} iter ".format(total_loss,i))
 
-    start = data[0]
-    start_idx = char_to_idx[start]
-    start_vec = np.zeros([vocab_size, 1])
-    start_vec[start_idx] = 1
-    seq = []
-    nstate = sess.run(init_state)
-    for _ in range(10):
-        seq.append(start_idx)
-        y,nstate = sess.run([out_index,state],feed_dict={inputs:start_vec.T,init_state:nstate})
-        start_idx = y[0]
-        start_vec[:,:] = 0
-        start_vec[start_idx,0] = 1.0
-    print(seq)
-    txt = ''.join(idx_to_char[ix] for ix in seq)
-    print(txt)
+        if(i%10 == 0):
+
+            start = data[0]
+            start_idx = char_to_idx[start]
+            start_vec = np.zeros([vocab_size, 1])
+            start_vec[start_idx] = 1
+            seq = []
+            nstate = sess.run(init_state)
+            for _ in range(200):
+                seq.append(start_idx)
+                y,nstate = sess.run([out_index,state],feed_dict={inputs:start_vec.T,init_state:nstate})
+                start_idx = y[0]
+                start_vec[:,:] = 0
+                start_vec[start_idx,0] = 1.0
+            # print(seq)
+            txt = ''.join(idx_to_char[ix] for ix in seq)
+            print(txt)
 
