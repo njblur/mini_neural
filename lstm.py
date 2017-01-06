@@ -17,21 +17,20 @@ class LSTM:
         self.c = np.zeros([hidden_size, 1])
         self.h = np.zeros([hidden_size, 1])
 
-        self.f_weights = np.random.randn(hidden_size, self.feature_size)*0.1
-        self.f_bias = np.ones([hidden_size, 1])*3
-        self.i_weights = np.random.randn(hidden_size, self.feature_size)*0.1
+        self.f_weights = np.random.randn(hidden_size, self.feature_size)*0.01
+        self.f_bias = np.ones([hidden_size, 1])*1.0
+        self.i_weights = np.random.randn(hidden_size, self.feature_size)*0.01
         self.i_bias = np.ones([hidden_size, 1])*0.001
-        self.o_weights = np.random.randn(hidden_size, self.feature_size)*0.1
+        self.o_weights = np.random.randn(hidden_size, self.feature_size)*0.01
         self.o_bias = np.ones([hidden_size, 1])*0.001
 
-        self.wct_weights = np.random.randn(hidden_size, self.feature_size)*0.1
+        self.wct_weights = np.random.randn(hidden_size, self.feature_size)*0.01
         self.wct_bias = np.zeros([hidden_size, 1])
         self.d_c = np.zeros_like(self.c)
 
     def clear_state(self):
         self.c[:, :] = 0
         self.h[:, :] = 0
-        self.d_c[:, :] = 0
 
     def forward(self, x):
         self.x = x
@@ -111,17 +110,17 @@ if __name__ == "__main__":
     """
     test code
     """
-    data = open("input.txt").read()
+    data = open("input.txt").read().decode("utf8")
     vocab = list(set(data))
     char_to_idx = {c:i for i,c in enumerate(vocab) }
     idx_to_char = {i:c for i,c in enumerate(vocab) }
-    hidden_size = 50
+    hidden_size = 100
     vocab_size = len(vocab)
     data_size = len(data)
     print data
     loop = 5000
-    learning_rate = 0.2
-    learning_rate_decay = 0.9988
+    learning_rate = 0.5
+    learning_rate_decay = 0.998
     lstm = LSTM(vocab_size, hidden_size)
     l_softmax = neural.layer(hidden_size,vocab_size,"softmax")
     
@@ -154,12 +153,15 @@ if __name__ == "__main__":
         start_vec = np.zeros([vocab_size, 1])
         start_vec[start_idx] = 1
         seq = []
-        for _ in range(200):
+        guide = 0
+        for i in range(200):
             seq.append(start_idx)
             y = lstm.forward(start_vec)
             start_vec = l_softmax.forward(y)
             # print(start_vec)
             start_idx = np.argmax(start_vec)
+            if(i<guide):
+                start_idx = char_to_idx[data[i+1]]
             # start_idx = np.random.choice(vocab_size, p=start_vec.ravel())
             start_vec[:,:] = 0
             start_vec[start_idx,0] = 1
