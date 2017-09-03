@@ -8,8 +8,8 @@ def sigmoid(x):
     x[x<-20] = -20
     x[x>20] = 20
     return 1.0/(1.0+np.exp(-x))
-def prime_sigmoid(x):
-    return sigmoid(x)*(1-sigmoid(x))
+def prime_sigmoid(a):
+    return a*(1-a)
 def softmax(x):
     maxx = np.max(x,axis=0,keepdims=0)
     regx = x-maxx
@@ -17,8 +17,8 @@ def softmax(x):
     sum = np.sum(exp,axis=0,keepdims=0)
     y = exp/sum
     return y
-def prime_softmax(x):
-    return softmax(x)*(1-softmax(x))
+def prime_softmax(a):
+    return a*(1-a) #softmax prime be calculated by loss prime directly
 class activation:
     def __init__(self,active,prime_active):
         self.active = active
@@ -30,11 +30,11 @@ activations["liner"] = activation(nop,prime_nop)
 activations["softmax"] = activation(softmax,prime_softmax)
 
 class layer:
-    def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.01):
+    def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.001):
         a = activations[active]
         self.fn_activate = a.active
         self.fn_prime_activate = a.prime_active
-        self.weights = np.random.randn(output_size,input_size)
+        self.weights = np.random.randn(output_size,input_size)/100.0
         self.d_weights = np.zeros((output_size,input_size))
         self.bias = np.random.randn(output_size,1)
         self.d_bias = np.zeros((output_size,1))
@@ -57,7 +57,7 @@ class layer:
 
         return self.dx
     def apply_gradients(self,learning_rate):
-        self.weights = self.weights - self.d_weights*learning_rate - self.weights*self.weight_decay/self.batch_size
+        self.weights = self.weights - self.d_weights*learning_rate - self.weights*self.weight_decay
         self.bias -= self.d_bias
 
 def square_loss(a,y):
@@ -70,8 +70,7 @@ def sigmoid_loss(a,y):
     l = -y*np.log(a)-(1-y)*np.log(1-a)
     return np.sum(l)
 def prime_sigmoid_loss(a,y):
-    # return (1-y)/(1-a)-y/a
-    return a-y
+    return (1-y)/(1-a)-y/a
 
 def softmax_loss(a,y):
     l = -y*np.log(a)

@@ -23,13 +23,16 @@ import gzip
 
 import numpy
 from six.moves import xrange  # pylint: disable=redefined-builtin
+import collections
+import os
 
-from tensorflow.contrib.learn.python.learn.datasets import base
-from tensorflow.python.framework import dtypes
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
-
+Datasets = collections.namedtuple('Datasets', ['train', 'validation', 'test'])
+def maybe_download(filename, work_directory, source_url):
+  filepath = os.path.join(work_directory, filename)
+  return filepath
 def _read32(bytestream):
   dt = numpy.dtype(numpy.uint32).newbyteorder('>')
   return numpy.frombuffer(bytestream.read(4), dtype=dt)[0]
@@ -107,17 +110,12 @@ class DataSet(object):
                labels,
                fake_data=False,
                one_hot=False,
-               dtype=dtypes.float32,
                reshape=True):
     """Construct a DataSet.
     one_hot arg is used only if fake_data is true.  `dtype` can be either
     `uint8` to leave the input as `[0, 255]`, or `float32` to rescale into
     `[0, 1]`.
     """
-    dtype = dtypes.as_dtype(dtype).base_dtype
-    if dtype not in (dtypes.uint8, dtypes.float32):
-      raise TypeError('Invalid image dtype %r, expected uint8 or float32' %
-                      dtype)
     if fake_data:
       self._num_examples = 10000
       self.one_hot = one_hot
@@ -132,10 +130,9 @@ class DataSet(object):
         assert images.shape[3] == 1
         images = images.reshape(images.shape[0],
                                 images.shape[1] * images.shape[2])
-      if dtype == dtypes.float32:
-        # Convert from [0, 255] -> [0.0, 1.0].
-        images = images.astype(numpy.float32)
-        images = numpy.multiply(images, 1.0 / 255.0)
+      # Convert from [0, 255] -> [0.0, 1.0].
+      images = images.astype(numpy.float32)
+      images = numpy.multiply(images, 1.0 / 255.0)
     self._images = images
     self._labels = labels
     self._epochs_completed = 0
@@ -189,7 +186,6 @@ class DataSet(object):
 def read_data_sets(train_dir,
                    fake_data=False,
                    one_hot=False,
-                   dtype=dtypes.float32,
                    reshape=True,
                    validation_size=5000):
   if fake_data:
@@ -200,29 +196,29 @@ def read_data_sets(train_dir,
     train = fake()
     validation = fake()
     test = fake()
-    return base.Datasets(train=train, validation=validation, test=test)
+    return Datasets(train=train, validation=validation, test=test)
 
   TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
   TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
   TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
   TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
 
-  local_file = base.maybe_download(TRAIN_IMAGES, train_dir,
+  local_file = maybe_download(TRAIN_IMAGES, train_dir,
                                    SOURCE_URL + TRAIN_IMAGES)
   with open(local_file, 'rb') as f:
     train_images = extract_images(f)
 
-  local_file = base.maybe_download(TRAIN_LABELS, train_dir,
+  local_file = maybe_download(TRAIN_LABELS, train_dir,
                                    SOURCE_URL + TRAIN_LABELS)
   with open(local_file, 'rb') as f:
     train_labels = extract_labels(f, one_hot=one_hot)
 
-  local_file = base.maybe_download(TEST_IMAGES, train_dir,
+  local_file = maybe_download(TEST_IMAGES, train_dir,
                                    SOURCE_URL + TEST_IMAGES)
   with open(local_file, 'rb') as f:
     test_images = extract_images(f)
 
-  local_file = base.maybe_download(TEST_LABELS, train_dir,
+  local_file = maybe_download(TEST_LABELS, train_dir,
                                    SOURCE_URL + TEST_LABELS)
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
@@ -237,15 +233,14 @@ def read_data_sets(train_dir,
   train_images = train_images[validation_size:]
   train_labels = train_labels[validation_size:]
 
-  train = DataSet(train_images, train_labels, dtype=dtype, reshape=reshape)
+  train = DataSet(train_images, train_labels, reshape=reshape)
   validation = DataSet(validation_images,
                        validation_labels,
-                       dtype=dtype,
                        reshape=reshape)
-  test = DataSet(test_images, test_labels, dtype=dtype, reshape=reshape)
+  test = DataSet(test_images, test_labels, reshape=reshape)
 
-  return base.Datasets(train=train, validation=validation, test=test)
+  return Datasets(train=train, validation=validation, test=test)
 
 
-def load_mnist(train_dir='MNIST-data'):
-  return read_data_sets(train_dir)
+def load_mnist(train_dir='MNIST-data',reshape=True):
+  return read_data_sets(train_dir,reshape=reshape)

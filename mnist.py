@@ -19,7 +19,7 @@ net = neural.network("sigmoid",learning_rate=0.9)
 net.add_layer(l1)
 net.add_layer(l2)
 loop = size//batch_size
-epoch = 10
+epoch = 5
 for _ in range(epoch):
     for _ in range(loop):
         images,labels = train.next_batch(batch_size)
