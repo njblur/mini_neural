@@ -10,6 +10,12 @@ def sigmoid(x):
     return 1.0/(1.0+np.exp(-x))
 def prime_sigmoid(a):
     return a*(1-a)
+def tanh(x):
+    x[x<-20] = -20
+    x[x>20] = 20
+    return (np.exp(x)-np.exp(-x))/(np.exp(x)+np.exp(-x))
+def prime_tanh(a):
+    return 1-a**2
 def softmax(x):
     maxx = np.max(x,axis=0,keepdims=0)
     regx = x-maxx
@@ -28,7 +34,7 @@ activations = dict()
 activations["sigmoid"] = activation(sigmoid,prime_sigmoid)
 activations["liner"] = activation(nop,prime_nop)
 activations["softmax"] = activation(softmax,prime_softmax)
-
+activations["tanh"] = activation(tanh,prime_tanh)
 class layer:
     def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.001):
         a = activations[active]

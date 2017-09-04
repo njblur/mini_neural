@@ -12,10 +12,10 @@ idx = range(batch_size)
 print size
 
 
-l1 = neural.layer(784,80,"sigmoid",weight_decay=0.001)
+l1 = neural.layer(784,80,"tanh",weight_decay=0.001)
 l2 = neural.layer(80,10,"sigmoid",weight_decay=0.001)
 
-net = neural.network("sigmoid",learning_rate=0.9)
+net = neural.network("sigmoid",learning_rate=0.6)
 net.add_layer(l1)
 net.add_layer(l2)
 loop = size//batch_size
