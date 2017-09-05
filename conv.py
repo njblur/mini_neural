@@ -4,6 +4,7 @@ class conv2d:
     def __init__(self,filter,stride,padding):
         self.filter = filter
         self.filter_linear = self.filter.reshape(-1,self.filter.shape[-1])
+        self.bias = np.zeros(shape=[filter.shape[-1]],dtype=float)
         self.stride = stride
         self.padding = padding
     def forward(self,x):
@@ -24,10 +25,11 @@ class conv2d:
                 garden[i,j,:,:,:] = self.expand[i*stride:i*stride+fh,j*stride:j*stride+fw,:]
 
         self.img2col = garden.reshape(target_h*target_w,fh*fw*c)
-        y = self.img2col.dot(self.filter_linear)
+        y = self.img2col.dot(self.filter_linear)+self.bias
         return y.reshape(target_h,target_w,foc)
     def backward(self,dy):
         dy_col = dy.reshape(-1,dy.shape[-1])
+        self.dbias = np.sum(dy_col,axis=0)
         dfilter_linear = self.img2col.T.dot(dy_col)
         self.dfilter = dfilter_linear.reshape(self.filter.shape)
         dimg2col = dy_col.dot(self.filter_linear.T)
@@ -43,8 +45,7 @@ class conv2d:
         return dexpand[padding:-padding,padding:-padding,:]
     def apply_gradients(self,learning_rate):
         self.filter -= self.dfilter*learning_rate
-
-
+        self.bias -= self.dbias*learning_rate*0.0001
 
 if __name__ == '__main__':
     image = np.ones(shape=[48,64,3])
