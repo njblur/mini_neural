@@ -1,5 +1,33 @@
 import numpy as np 
 import IPython
+class relu:
+    def forward(self,x):
+        self.mask = (x < 0) 
+        x[self.mask] = 0
+        return x
+
+    def backward(self,dy):
+        dy[self.mask] = 0
+        return dy
+
+    def apply_gradients(self,learning_rate):
+        return
+class dropout:
+    def __init__(self,keep):
+        self.keep = keep
+    def forward(self,x):
+        linear = x.reshape(-1)
+        self.outs = np.random.choice(len(linear),size=int(len(linear)*(1-self.keep))) 
+        linear[outs] = 0
+        return x
+
+    def backward(self,dy):
+        linear = dy.reshape(-1)
+        linear[outs] = 0
+        return dy
+
+    def apply_gradients(self,learning_rate):
+        return
 class conv2d:
     def __init__(self,filter,stride,padding):
         self.filter = filter
@@ -45,7 +73,7 @@ class conv2d:
         return dexpand[padding:-padding,padding:-padding,:]
     def apply_gradients(self,learning_rate):
         self.filter -= self.dfilter*learning_rate
-        self.bias -= self.dbias*learning_rate*0.0001
+        self.bias -= self.dbias*learning_rate
 
 if __name__ == '__main__':
     image = np.ones(shape=[48,64,3])
