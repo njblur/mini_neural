@@ -40,7 +40,7 @@ class layer:
         a = activations[active]
         self.fn_activate = a.active
         self.fn_prime_activate = a.prime_active
-        self.weights = np.random.randn(output_size,input_size)/100.0
+        self.weights = np.random.randn(output_size,input_size)/10.0
         self.d_weights = np.zeros((output_size,input_size))
         self.bias = np.random.randn(output_size,1)
         self.d_bias = np.zeros((output_size,1))
@@ -73,12 +73,15 @@ def prime_square_loss(a,y):
     return (a-y)
 
 def sigmoid_loss(a,y):
+    a = a.clip(1e-9,1-1e-9)
     l = -y*np.log(a)-(1-y)*np.log(1-a)
     return np.sum(l)
 def prime_sigmoid_loss(a,y):
+    a = a.clip(1e-9,1.0-1e-9)
     return (1-y)/(1-a)-y/a
 
 def softmax_loss(a,y):
+    a = a.clip(1e-9,1.0)
     l = -y*np.log(a)
     return np.sum(l)
 def prime_softmax_loss(a,y):
