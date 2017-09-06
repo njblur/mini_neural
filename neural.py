@@ -16,6 +16,12 @@ def tanh(x):
     return (np.exp(x)-np.exp(-x))/(np.exp(x)+np.exp(-x))
 def prime_tanh(a):
     return 1-a**2
+def relu(x):
+    x[x<0] = 0
+    return x
+
+def prime_relu(a):
+    return a>0
 def softmax(x):
     maxx = np.max(x,axis=0,keepdims=0)
     regx = x-maxx
@@ -35,6 +41,7 @@ activations["sigmoid"] = activation(sigmoid,prime_sigmoid)
 activations["linear"] = activation(nop,prime_nop)
 activations["softmax"] = activation(softmax,prime_softmax)
 activations["tanh"] = activation(tanh,prime_tanh)
+activations["relu"] = activation(relu,prime_relu)
 class layer:
     def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.0001):
         a = activations[active]

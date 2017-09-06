@@ -23,7 +23,7 @@ conv_layer = conv.conv2d(filter,2,1)
 relu = conv.relu()
 
 hidden = 100
-l1 = neural.layer(28*28/1/4*5,hidden,"linear",weight_decay=0.0)
+l1 = neural.layer(28*28/1/4*5,hidden,"relu",weight_decay=0.0)
 l2 = neural.layer(hidden,10,"softmax",weight_decay=0.0)
 
 loop = size//batch_size
