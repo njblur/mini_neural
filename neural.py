@@ -32,11 +32,11 @@ class activation:
 
 activations = dict()
 activations["sigmoid"] = activation(sigmoid,prime_sigmoid)
-activations["liner"] = activation(nop,prime_nop)
+activations["linear"] = activation(nop,prime_nop)
 activations["softmax"] = activation(softmax,prime_softmax)
 activations["tanh"] = activation(tanh,prime_tanh)
 class layer:
-    def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.001):
+    def __init__(self,input_size,output_size,active,bias_rate=1.0,weight_decay=0.0001):
         a = activations[active]
         self.fn_activate = a.active
         self.fn_prime_activate = a.prime_active
@@ -44,6 +44,8 @@ class layer:
         self.d_weights = np.zeros((output_size,input_size))
         self.bias = np.random.randn(output_size,1)
         self.d_bias = np.zeros((output_size,1))
+        self.m_weights = np.zeros_like(self.weights)
+        self.m_bias = np.zeros_like(self.bias)
         self.bias_rate = bias_rate
         self.weight_decay = weight_decay
     def forward(self,x):
@@ -57,14 +59,18 @@ class layer:
             self.dy = y
         else:
             self.dy = self.fn_prime_activate(self.out) * y
-        self.d_weights = np.matmul(self.dy,self.x.T)/self.batch_size
-        self.d_bias = np.sum(self.dy,axis=1,keepdims=1)/self.batch_size
+        self.d_weights = np.matmul(self.dy,self.x.T)
+        self.d_bias = np.sum(self.dy,axis=1,keepdims=1)
         self.dx = np.matmul(self.weights.T,self.dy)
 
         return self.dx
     def apply_gradients(self,learning_rate):
-        self.weights = self.weights - self.d_weights*learning_rate - self.weights*self.weight_decay
-        self.bias -= self.d_bias
+        self.m_weights = self.m_weights*0.9 + self.d_weights*0.1
+        self.m_bias = self.m_bias*0.9 + self.d_bias*0.1
+        self.weights = self.weights - self.m_weights*learning_rate - self.weights*self.weight_decay
+        self.bias -= self.m_bias*learning_rate
+        # self.weights = self.weights - self.d_weights*learning_rate - self.weights*self.weight_decay
+        # self.bias -= self.d_bias*learning_rate
 
 def square_loss(a,y):
     l = np.sum((a-y)*(a-y))/2

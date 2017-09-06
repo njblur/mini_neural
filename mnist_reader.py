@@ -135,6 +135,10 @@ class DataSet(object):
       images = numpy.multiply(images, 1.0 / 255.0)
     self._images = images
     self._labels = labels
+    perm = numpy.arange(self._num_examples)
+    numpy.random.shuffle(perm)
+    self._images = self._images[perm]
+    self._labels = self._labels[perm]
     self._epochs_completed = 0
     self._index_in_epoch = 0
 

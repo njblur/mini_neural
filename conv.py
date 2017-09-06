@@ -18,12 +18,12 @@ class dropout:
     def forward(self,x):
         linear = x.reshape(-1)
         self.outs = np.random.choice(len(linear),size=int(len(linear)*(1-self.keep))) 
-        linear[outs] = 0
+        linear[self.outs] = 0
         return x
 
     def backward(self,dy):
         linear = dy.reshape(-1)
-        linear[outs] = 0
+        linear[self.outs] = 0
         return dy
 
     def apply_gradients(self,learning_rate):
@@ -35,6 +35,8 @@ class conv2d:
         self.bias = np.zeros(shape=[filter.shape[-1]],dtype=float)
         self.stride = stride
         self.padding = padding
+        self.m_filter = np.zeros_like(self.filter)
+        self.m_bias = np.zeros_like(self.bias)
     def forward(self,x):
         padding = self.padding
         stride = self.stride
@@ -72,9 +74,12 @@ class conv2d:
                 dexpand[i*stride:i*stride+fh,j*stride:j*stride+fw,:] += dgarden[i,j,:,:,:]
         return dexpand[padding:-padding,padding:-padding,:]
     def apply_gradients(self,learning_rate):
-        self.filter -= self.dfilter*learning_rate
-        self.bias -= self.dbias*learning_rate
-
+        self.m_bias = self.m_bias*0.9 + self.dbias*0.1
+        self.m_filter = self.m_filter*0.9 + self.dfilter*0.1
+        self.filter -= self.m_filter*learning_rate
+        self.bias -= self.m_bias*learning_rate
+        # self.filter -= self.dfilter*learning_rate
+        # self.bias -= self.dbias*learning_rate
 if __name__ == '__main__':
     image = np.ones(shape=[48,64,3])
     filter = np.ones(shape=[5,5,3,7])
