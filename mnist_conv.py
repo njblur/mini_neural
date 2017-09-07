@@ -4,7 +4,7 @@ import IPython
 import mnist_reader
 import neural
 import conv
-batch_size = 1
+batch_size = 20
 label_num = 10
 data = mnist_reader.load_mnist(train_dir='data',reshape=False)
 train = data.train
@@ -28,7 +28,7 @@ l2 = neural.layer(hidden,10,"softmax",weight_decay=0.0)
 
 loop = size//batch_size
 
-epoch = 1
+epoch = 8
 learning_rate = 0.005
 for k in range(epoch):
     for j in range(loop):
@@ -36,7 +36,7 @@ for k in range(epoch):
         l = np.zeros([label_num,batch_size])
         l[[labels],idx] = 1
         data = images
-        labels = l.reshape(batch_size,-1).T
+        labels = l
         conv_out0 = conv_layer0.forward(data)
         reludata0 = relu0.forward(conv_out0)
         conv_out = conv_layer.forward(reludata0)
@@ -47,7 +47,6 @@ for k in range(epoch):
         l2_out = l2.forward(dropoutdata0)
         loss = neural.softmax_loss(l2_out,labels).sum()/batch_size
         print 'loss is ' + str(loss) + '  '+str(j*100.0/loop)+'%'
-        IPython.embed()
         dloss = neural.prime_softmax_loss(l2_out,labels)
         dl2_out = l2.backward(dloss)
         ddropout0 = dropout0.backward(dl2_out)
@@ -74,10 +73,10 @@ for k in range(epoch):
         reludata0 = relu0.forward(conv_out0)
         conv_out = conv_layer.forward(reludata0)
         reludata = relu.forward(conv_out)
-        linear = conv_out.reshape(-1,batch_size)
+        linear = conv_out.reshape(batch_size,-1).T
         l1_out = l1.forward(linear)
         l2_out = l2.forward(l1_out)
         n = np.argmax(l2_out,axis=0)
         correct += np.count_nonzero(n == label )
-    print "{} correct, rate is {}".format(correct,correct*1.0/test_size)
     # IPython.embed()
+    print "{} correct, rate is {}".format(correct,correct*1.0/test_size)
