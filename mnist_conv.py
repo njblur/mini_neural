@@ -14,22 +14,22 @@ size = train.num_examples
 idx = range(batch_size)
 
 
-filter0 = np.random.standard_normal(size=[3,3,1,3])*0.1
-filter = np.random.standard_normal(size=[3,3,3,5])*0.1
-conv_layer0 = conv.conv2d(filter0,1,1)
+filter0 = np.random.standard_normal(size=[3,3,1,16])*0.1
+filter = np.random.standard_normal(size=[3,3,16,16])*0.1
+conv_layer0 = conv.conv2d(filter0,2,1)
 relu0 = conv.relu()
-dropout0 = conv.dropout(0.6)
+dropout0 = conv.dropout(0.5)
 conv_layer = conv.conv2d(filter,2,1)
 relu = conv.relu()
 
-hidden = 100
-l1 = neural.layer(28*28/1/4*5,hidden,"relu",weight_decay=0.0)
+hidden = 64
+l1 = neural.layer(28*28/4/4*16,hidden,"relu",weight_decay=0.0)
 l2 = neural.layer(hidden,10,"softmax",weight_decay=0.0)
 
 loop = size//batch_size
 
 epoch = 1
-learning_rate = 0.0015
+learning_rate = 0.005
 for k in range(epoch):
     for j in range(loop):
         images,labels = train.next_batch(batch_size)
@@ -40,28 +40,29 @@ for k in range(epoch):
             label = l[i].reshape(-1,1)
             conv_out0 = conv_layer0.forward(data)
             reludata0 = relu0.forward(conv_out0)
-            dropoutdata0 = dropout0.forward(reludata0)
-            conv_out = conv_layer.forward(dropoutdata0)
+            conv_out = conv_layer.forward(reludata0)
             reludata = relu.forward(conv_out)
             linear = reludata.reshape(-1,1)
             l1_out = l1.forward(linear)
-            l2_out = l2.forward(l1_out)
+            dropoutdata0 = dropout0.forward(l1_out)
+            l2_out = l2.forward(dropoutdata0)
             loss = neural.softmax_loss(l2_out,label)
-            print 'loss is ' + str(loss)
+            if(i == 10):
+                print 'loss is ' + str(loss) + '  '+str(j*100.0/loop)+'%'
             dloss = neural.prime_softmax_loss(l2_out,label)
             dl2_out = l2.backward(dloss)
-            dlinear = l1.backward(dl2_out)
+            ddropout0 = dropout0.backward(dl2_out)
+            dlinear = l1.backward(ddropout0)
             dreluout = dlinear.reshape(reludata.shape)
             dconv_out = relu.backward(dreluout)
             ddata = conv_layer.backward(dconv_out)
-            ddropout0 = dropout0.backward(ddata)
-            drelu0 = relu0.backward(ddropout0)
+            drelu0 = relu0.backward(ddata)
             dconv_out0 = conv_layer0.backward(drelu0)
             conv_layer.apply_gradients(learning_rate)
             conv_layer0.apply_gradients(learning_rate)
             l1.apply_gradients(learning_rate)
-        if (j != 0 and j % 400 == 0):
-            learning_rate *= 0.4
+    if (k > 0):
+        learning_rate =0.0001
 
     correct = 0
     test_size = test.num_examples
