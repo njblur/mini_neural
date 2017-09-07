@@ -8,6 +8,7 @@ an mnist example is made based on this experimental neural nets.
 A simple LSTM is implemented also but with no sequence,no batch yet.
 
 update 2017-09-07
+
 just now, I finished the work to implement a Convolution Neural Network and an lenet-like mnist example.  
 It is a full functional convolotion network with padding, strides,batch relu,dropout,moment optimizer
 til now, the mini neural is not just 'mini',with RNN implemented days agao.
