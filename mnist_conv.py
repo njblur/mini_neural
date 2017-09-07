@@ -22,13 +22,13 @@ dropout0 = conv.dropout(0.5)
 conv_layer = conv.conv2d(filter,2,1)
 relu = conv.relu()
 
-hidden = 64
+hidden = 128
 l1 = neural.layer(28*28/4/4*16,hidden,"relu",weight_decay=0.0)
 l2 = neural.layer(hidden,10,"softmax",weight_decay=0.0)
 
 loop = size//batch_size
 
-epoch = 1
+epoch = 10
 learning_rate = 0.005
 for k in range(epoch):
     for j in range(loop):
@@ -62,7 +62,7 @@ for k in range(epoch):
             conv_layer0.apply_gradients(learning_rate)
             l1.apply_gradients(learning_rate)
     if (k > 0):
-        learning_rate =0.0001
+        learning_rate =0.002
 
     correct = 0
     test_size = test.num_examples
