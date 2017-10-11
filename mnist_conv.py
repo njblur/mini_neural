@@ -24,15 +24,18 @@ relu = conv.relu()
 
 hidden = 128
 l1 = neural.layer(28*28/4/4*16,hidden,"relu",weight_decay=0.0)
-l2 = neural.layer(hidden,10,"softmax",weight_decay=0.0)
+l2 = neural.layer(hidden,label_num,"softmax",weight_decay=0.0)
+
+centers = np.random.standard_normal(size=[hidden,label_num])*0.001
 
 loop = size//batch_size
 
-epoch = 8
-learning_rate = 0.005
+epoch = 10
+learning_rate = 0.001
 for k in range(epoch):
     for j in range(loop):
         images,labels = train.next_batch(batch_size)
+        ori_labels = labels
         l = np.zeros([label_num,batch_size])
         l[[labels],idx] = 1
         data = images
@@ -47,9 +50,26 @@ for k in range(epoch):
         l2_out = l2.forward(dropoutdata0)
         loss = neural.softmax_loss(l2_out,labels).sum()/batch_size
         print 'loss is ' + str(loss) + '  '+str(j*100.0/loop)+'%'
+        ## calculate center loss
+        batch_centers = centers[:,ori_labels]
+        center_diff = l1_out-batch_centers
+        center_loss = np.square(center_diff)/2/batch_size
+        d_center_loss = l1_out - batch_centers
+        d_l1_center = center_diff
+        d_centers = -center_diff
+        total_center_loss = np.sum(np.sum(center_loss,axis=0))
+        print "center loss is %f"%total_center_loss
+        ## end calculate center loss
+
         dloss = neural.prime_softmax_loss(l2_out,labels)
         dl2_out = l2.backward(dloss)
         ddropout0 = dropout0.backward(dl2_out)
+        ## apply center loss
+        if k > 5:
+            ddropout0 += d_l1_center*0.01
+            for i in range(batch_size):
+                center_idx = ori_labels[i]
+                centers[:,center_idx] -= d_center_loss[:,i]*learning_rate*0.01
         dlinear = l1.backward(ddropout0)
         dlinear = dlinear.T
         dreluout = dlinear.reshape(reludata.shape)
